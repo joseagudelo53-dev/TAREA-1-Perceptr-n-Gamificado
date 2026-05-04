@@ -468,41 +468,27 @@ with col_right:
 
     # ── Live output table ────────────────────────────────
     st.markdown("### 🔢 Tabla de salidas en tiempo real")
-    header_html = """
-    <div style="display:grid; grid-template-columns:1fr 0.6fr 0.6fr 0.7fr 0.7fr 0.5fr;
-                gap:4px; font-family:'Space Mono',monospace; font-size:0.7rem;
-                color:#555; text-transform:uppercase; letter-spacing:1px;
-                padding: 0 4px 6px 4px;">
-      <div>Patrón</div><div>x₁</div><div>x₂</div>
-      <div>z</div><div>Pred</div><div>OK?</div>
-    </div>
-    """
-    rows_html = ""
+
+    import pandas as pd
+    table_rows = []
     for i, pat in enumerate(PATTERNS):
         x1v = input_value(pat["s1"])
         x2v = input_value(pat["s2"])
         z, pred = perceptron_output(x1v, x2v, w1, w2, bias)
         target_int = 1 if st.session_state.targets[i] else -1
         ok = pred == target_int
-        pred_col = "#5fdf6f" if pred == 1 else "#df5f5f"
-        ok_sym = "✅" if ok else "❌"
-        rows_html += f"""
-        <div style="display:grid; grid-template-columns:1fr 0.6fr 0.6fr 0.7fr 0.7fr 0.5fr;
-                    gap:4px; font-family:'Space Mono',monospace; font-size:0.75rem;
-                    color:#ccc; padding:5px 4px; border-bottom:1px solid #1e1e1e;">
-          <div style="color:#eee;">{pat['name']}</div>
-          <div>{x1v:+.0f}</div>
-          <div>{x2v:+.0f}</div>
-          <div style="color:#f0c040;">{z:+.2f}</div>
-          <div style="color:{pred_col};">{'(+1)' if pred==1 else '(−1)'}</div>
-          <div>{ok_sym}</div>
-        </div>"""
+        table_rows.append({
+            "Patrón":     pat["name"],
+            "x₁":         f"{x1v:+.0f}",
+            "x₂":         f"{x2v:+.0f}",
+            "z (suma)":   f"{z:+.2f}",
+            "Predicción": "+1" if pred == 1 else "−1",
+            "Objetivo":   "+1" if target_int == 1 else "−1",
+            "✓/✗":        "✅" if ok else "❌",
+        })
 
-    st.markdown(f"""
-    <div class="card" style="padding:12px 16px;">
-      {header_html}{rows_html}
-    </div>
-    """, unsafe_allow_html=True)
+    df = pd.DataFrame(table_rows)
+    st.dataframe(df, use_container_width=True, hide_index=True)
 
 
 # ─── FOOTER ─────────────────────────────────────────────────────────────────────
